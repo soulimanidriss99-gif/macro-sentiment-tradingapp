@@ -1,89 +1,77 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from transformers import pipeline
-from impact_logic import get_market_impact, get_weekly_outlook
+from impact_logic import get_futures_impact, get_weekly_outlook
 
-st.set_page_config(page_title="2026 Macro Sentinel", layout="wide", initial_sidebar_state="collapsed")
+# --- APP CONFIG ---
+st.set_page_config(page_title="2026 Futures Sentinel", layout="wide")
 
-# --- UI STYLING ---
+# --- CUSTOM DARK THEME CSS ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: white; }
-    div[data-testid="stMetricValue"] { font-size: 1.8rem; color: #00ffcc; }
+    .stMetric { background-color: #1e1e26; padding: 15px; border-radius: 10px; border: 1px solid #333; }
+    [data-testid="stMetricValue"] { color: #00ffcc; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- AI MODEL LOADING ---
+# --- LOAD AI MODEL ---
 @st.cache_resource
-def load_sentiment_model():
+def load_nlp():
+    # Using FinBERT for financial-specific sentiment
     return pipeline("sentiment-analysis", model="ProsusAI/finbert")
 
-nlp = load_sentiment_model()
+nlp_model = load_nlp()
 
 # --- HEADER ---
-st.title("🏛️ Macro Sentiment & Weekly Outlook")
-st.caption("Intelligence for March 2026 Markets | ES • NQ • GC • EUR/USD")
+st.title("🛰️ 2026 Futures Macro Sentinel")
+st.caption("Strategic Intelligence for Professional Futures Trading")
 
 # --- TABS ---
-tab1, tab2, tab3 = st.tabs(["📅 Weekly Strategy", "📰 News Analyzer", "📈 Live Charts"])
+tab1, tab2, tab3 = st.tabs(["📅 Weekly Strategy", "📰 News Analysis", "🔧 Contract Specs"])
 
 with tab1:
-    data = get_weekly_outlook()
-    st.subheader(f"Current Theme: {data['Theme']}")
+    outlook = get_weekly_outlook()
+    st.info(f"**Primary Market Driver:** {outlook['Theme']}")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.write("### Instrument Bias")
-        for inst, bias in data['Bias'].items():
-            st.info(f"**{inst}**: {bias}")
+        st.write("### 📉 Futures Instrument Bias")
+        for inst, bias in outlook['Analysis'].items():
+            st.markdown(f"**{inst}**: {bias}")
     
     with col2:
-        st.write("### Economic Calendar")
-        for event in data['Calendar']:
-            st.write(f"📅 {event}")
+        st.write("### 📅 High-Impact Calendar")
+        for event in outlook['Calendar']:
+            st.write(f"• {event}")
 
 with tab2:
-    st.subheader("Analyze Headline Impact")
-    col_a, col_b = st.columns([3, 1])
-    with col_a:
-        news_text = st.text_area("Paste News Item:", "The PCE data shows inflation is not cooling as fast as expected.")
-    with col_b:
-        category = st.selectbox("Category", ["Inflation", "Geopolitics", "Central Bank", "Employment"])
-    
-    if st.button("Calculate Market Shift"):
-        result = nlp(news_text)[0]
-        impacts = get_market_impact(result['label'], result['score'], category)
+    st.write("### Instant News Impact Analyzer")
+    news_col, cat_col = st.columns([3, 1])
+    with news_col:
+        news_input = st.text_area("Paste Headline/Data Point:", "PCE Inflation comes in at 2.9%, higher than the expected 2.6%.")
+    with cat_col:
+        cat = st.selectbox("Category", ["Inflation", "Geopolitics", "Employment", "Central Bank"])
         
-        st.divider()
-        st.markdown(f"**Sentiment Analysis:** {result['label'].upper()} ({result['score']:.2%})")
+    if st.button("Analyze Futures Impact"):
+        res = nlp_model(news_input)[0]
+        impacts = get_futures_impact(res['label'], res['score'], cat)
         
+        st.success(f"AI Sentiment: {res['label']} ({res['score']:.2%})")
         m_cols = st.columns(4)
-        for i, (inst, val) in enumerate(impacts.items()):
-            m_cols[i].metric(inst, val)
+        for i, (name, val) in enumerate(impacts.items()):
+            m_cols[i].metric(name, val)
 
 with tab3:
-    st.subheader("Market Overview (TradingView)")
-    # TradingView Ticker Tape Widget
-    tradingview_html = """
-    <div class="tradingview-widget-container">
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-      {
-      "symbols": [
-        {"proName": "CME_MINI:ES1!", "title": "S&P 500 Futures"},
-        {"proName": "CME_MINI:NQ1!", "title": "Nasdaq 100 Futures"},
-        {"proName": "COMEX:GC1!", "title": "Gold Futures"},
-        {"proName": "FX:EURUSD", "title": "EUR/USD"}
-      ],
-      "colorTheme": "dark",
-      "isTransparent": true,
-      "displayMode": "adaptive",
-      "locale": "en"
+    st.write("### 📝 Futures Contract Reference (CME/COMEX)")
+    specs = {
+        "Instrument": ["ES (E-mini S&P)", "NQ (E-mini Nasdaq)", "GC (Gold)", "6E (Euro)"],
+        "Tick Size": ["0.25", "0.25", "0.10", "0.0001"],
+        "Tick Value": ["$12.50", "$5.00", "$10.00", "$12.50"],
+        "Point Value": ["$50", "$20", "$100", "$125,000 (Full)"]
     }
-      </script>
-    </div>
-    """
-    components.html(tradingview_html, height=100)
-    st.info("The charts above provide real-time price action for your core instruments.")
+    st.table(specs)
+    st.caption("Note: Values based on March 2026 CME Specifications.")
 
 st.sidebar.markdown("---")
-st.sidebar.write("Developed for Team Leader Operations | 2026")
+st.sidebar.write("Team Leader Operations Edition")
+st.sidebar.caption("Last Deployment: March 22, 2026")
