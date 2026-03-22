@@ -1,46 +1,69 @@
 def get_futures_impact(sentiment_label, score, category):
-    # March 2026 Impact Matrix for Futures
-    impacts = {
-        "ES (E-mini S&P)": "Neutral", 
-        "NQ (E-mini Nasdaq)": "Neutral", 
-        "GC (Gold)": "Neutral", 
-        "EUR/USD (6E)": "Neutral"
-    }
+    # Mapping for March 2026 Futures Market
+    impacts = {"ES (S&P)": "Neutral", "NQ (Nasdaq)": "Neutral", "GC (Gold)": "Neutral", "6E (Euro)": "Neutral"}
     
     if category == "Inflation":
-        if sentiment_label == "Negative": # i.e., Inflation is HIGHER than expected
+        if sentiment_label == "Negative": # Hot Inflation / Sticky
             impacts.update({
-                "ES (E-mini S&P)": "🔻 Bearish (Rate hike fears)", 
-                "NQ (E-mini Nasdaq)": "🔻 Bearish (Yield sensitivity)", 
-                "GC (Gold)": "🚀 Bullish (Inflation hedge)", 
-                "EUR/USD (6E)": "🚀 Bullish (USD weakness)"
+                "ES (S&P)": "🔻 Bearish (Rate Pressure)", 
+                "NQ (Nasdaq)": "🔻 Bearish (Yield Sensitivity)", 
+                "GC (Gold)": "🚀 Bullish (Hedge)", 
+                "6E (Euro)": "🚀 Bullish (USD Weakness)"
             })
-        else: # Inflation cooling
-            impacts.update({"ES (E-mini S&P)": "🚀 Bullish", "NQ (E-mini Nasdaq)": "🚀 Bullish", "GC": "🔻 Bearish"})
+        else:
+            impacts.update({"ES (S&P)": "🚀 Bullish", "NQ (Nasdaq)": "🚀 Bullish", "GC": "🔻 Bearish"})
             
     elif category == "Geopolitics":
         if sentiment_label == "Negative": # Conflict Escalation
             impacts.update({
-                "ES (E-mini S&P)": "🔻 Bearish (Energy Costs)", 
-                "NQ (E-mini Nasdaq)": "🔻 Bearish (Risk-Off)", 
+                "ES (S&P)": "🔻 Bearish (Risk-Off)", 
+                "NQ (Nasdaq)": "🔻 Bearish (Energy Tax)", 
                 "GC (Gold)": "🚀 Bullish (Safe Haven)", 
-                "EUR/USD (6E)": "🔻 Bearish (Flight to USD)"
+                "6E (Euro)": "🔻 Bearish (Energy Vulnerability)"
             })
     return impacts
 
+def get_fundamental_strategy():
+    # Strategy based on March 22, 2026 Global Macro conditions
+    return [
+        {
+            "Rank": "🥇 Top Conviction",
+            "Instrument": "Gold (GC)",
+            "Direction": "Long (Bullish)",
+            "Rationale": "Geopolitical safe-haven bid + decoupling from yields. Central bank buying remains high in 2026.",
+            "Timing": "Accumulate on pullbacks; high volatility expected Friday morning.",
+            "Target": "5,200"
+        },
+        {
+            "Rank": "🥈 Macro Play",
+            "Instrument": "Euro (6E)",
+            "Direction": "Short (Bearish)",
+            "Rationale": "Eurozone growth-inflation gap widening vs US. Energy import costs spiking.",
+            "Timing": "Sell rallies toward 1.1520; Target 1.1300.",
+            "Target": "1.1300"
+        },
+        {
+            "Rank": "🥉 Tactical Play",
+            "Instrument": "Nasdaq (NQ)",
+            "Direction": "Short (Bearish)",
+            "Rationale": "10Y Treasury yields hitting 4.5% are a headwind for high-multiple tech.",
+            "Timing": "Best entry after Thursday's GDP revision if data is hot.",
+            "Target": "18,200"
+        }
+    ]
+
 def get_weekly_outlook():
-    # Tailored for the week of March 22, 2026
     return {
-        "Theme": "PCE Inflation Data & Global Supply Chain Volatility",
+        "Theme": "PCE Inflation & Global Supply Chain Volatility",
         "Analysis": {
-            "ES (E-mini S&P)": "⚠️ Neutral/Bearish. Major resistance at 6000. Watching 5850 support.",
-            "NQ (E-mini Nasdaq)": "🔻 Bearish Bias. Tech under pressure as 10Y Yields remain above 4.5%.",
-            "GC (Gold)": "🚀 Bullish. Strong safe-haven bid due to Middle East tensions.",
-            "EUR/USD (6E)": "🔻 Bearish. Target 1.1350 as energy costs pressure the Eurozone."
+            "ES (E-mini S&P)": "⚠️ Neutral/Bearish. Range bound between 5850 and 6020.",
+            "NQ (E-mini Nasdaq)": "🔻 Bearish. Growth stocks underperforming as yields rise.",
+            "GC (Gold)": "🚀 Bullish. The 'Fear Trade' is currently the strongest narrative.",
+            "6E (EUR/USD)": "🔻 Bearish. US Dollar dominance remains the default 2026 trend."
         },
         "Calendar": [
-            "Tuesday: US Flash PMIs (Manufacturing/Services)",
+            "Tuesday: US Flash PMIs (Initial Q1 Signal)",
             "Thursday: GDP Final Revision (Q4 2025)",
-            "Friday: Core PCE Price Index (High Volatility Expected)"
+            "Friday: Core PCE Price Index (High Volatility)"
         ]
     }
