@@ -1,58 +1,73 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import pandas as pd
 from transformers import pipeline
-from impact_logic import get_futures_impact, get_weekly_outlook
+from impact_logic import get_futures_impact, get_weekly_outlook, get_fundamental_strategy
 
-# --- APP CONFIG ---
-st.set_page_config(page_title="2026 Futures Sentinel", layout="wide")
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="2026 Trading Sentinel", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CUSTOM DARK THEME CSS ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    .stMetric { background-color: #1e1e26; padding: 15px; border-radius: 10px; border: 1px solid #333; }
-    [data-testid="stMetricValue"] { color: #00ffcc; }
+    .main { background-color: #0e1117; color: white; }
+    .stMetric { background-color: #1e1e26; border: 1px solid #444; padding: 15px; border-radius: 10px; }
+    div[data-testid="stExpander"] { background-color: #1e1e26; border: none; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- LOAD AI MODEL ---
+# --- CACHE AI MODEL ---
 @st.cache_resource
 def load_nlp():
-    # Using FinBERT for financial-specific sentiment
     return pipeline("sentiment-analysis", model="ProsusAI/finbert")
 
 nlp_model = load_nlp()
 
 # --- HEADER ---
-st.title("🛰️ 2026 Futures Macro Sentinel")
-st.caption("Strategic Intelligence for Professional Futures Trading")
+st.title("🛰️ 2026 Futures Trading Sentinel")
+st.caption("Fundamental, Sentiment & Macro Analysis | Week of March 22, 2026")
 
-# --- TABS ---
-tab1, tab2, tab3 = st.tabs(["📅 Weekly Strategy", "📰 News Analysis", "🔧 Contract Specs"])
+# --- FUNDAMENTAL STRATEGY SECTION ---
+st.markdown("### 💡 Fundamental Strategy & Top Picks")
+strategy_list = get_fundamental_strategy()
+cols = st.columns(3)
+
+for i, trade in enumerate(strategy_list):
+    with cols[i]:
+        st.info(f"**{trade['Rank']}**")
+        st.markdown(f"**{trade['Instrument']} | {trade['Direction']}**")
+        st.write(f"**Rationale:** {trade['Rationale']}")
+        st.write(f"**Target:** {trade['Target']}")
+        st.caption(f"🕒 **Timing:** {trade['Timing']}")
+
+st.divider()
+
+# --- MAIN TABS ---
+tab1, tab2, tab3 = st.tabs(["📊 Market Outlook", "📰 News Analyzer", "🔧 Contract Specs"])
 
 with tab1:
     outlook = get_weekly_outlook()
-    st.info(f"**Primary Market Driver:** {outlook['Theme']}")
+    st.info(f"**Primary Weekly Driver:** {outlook['Theme']}")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.write("### 📉 Futures Instrument Bias")
+        st.write("### Instrument Bias")
         for inst, bias in outlook['Analysis'].items():
             st.markdown(f"**{inst}**: {bias}")
     
     with col2:
-        st.write("### 📅 High-Impact Calendar")
+        st.write("### High-Impact Calendar")
         for event in outlook['Calendar']:
-            st.write(f"• {event}")
+            st.write(f"📅 {event}")
 
 with tab2:
-    st.write("### Instant News Impact Analyzer")
+    st.subheader("Instant Sentiment Analyzer")
     news_col, cat_col = st.columns([3, 1])
     with news_col:
-        news_input = st.text_area("Paste Headline/Data Point:", "PCE Inflation comes in at 2.9%, higher than the expected 2.6%.")
+        news_input = st.text_area("Paste News Headline:", "Fed officials suggest interest rates may need to move higher if PCE remains sticky.")
     with cat_col:
-        cat = st.selectbox("Category", ["Inflation", "Geopolitics", "Employment", "Central Bank"])
+        cat = st.selectbox("Category", ["Inflation", "Geopolitics", "Central Bank", "Employment"])
         
-    if st.button("Analyze Futures Impact"):
+    if st.button("Calculate Market Shift"):
         res = nlp_model(news_input)[0]
         impacts = get_futures_impact(res['label'], res['score'], cat)
         
@@ -62,16 +77,15 @@ with tab2:
             m_cols[i].metric(name, val)
 
 with tab3:
-    st.write("### 📝 Futures Contract Reference (CME/COMEX)")
+    st.write("### 📝 Futures Contract Reference (CME)")
     specs = {
-        "Instrument": ["ES (E-mini S&P)", "NQ (E-mini Nasdaq)", "GC (Gold)", "6E (Euro)"],
+        "Instrument": ["ES (S&P 500)", "NQ (Nasdaq 100)", "GC (Gold)", "6E (Euro)"],
         "Tick Size": ["0.25", "0.25", "0.10", "0.0001"],
         "Tick Value": ["$12.50", "$5.00", "$10.00", "$12.50"],
         "Point Value": ["$50", "$20", "$100", "$125,000 (Full)"]
     }
-    st.table(specs)
-    st.caption("Note: Values based on March 2026 CME Specifications.")
+    st.table(pd.DataFrame(specs))
 
 st.sidebar.markdown("---")
-st.sidebar.write("Team Leader Operations Edition")
-st.sidebar.caption("Last Deployment: March 22, 2026")
+st.sidebar.write("**Team Leader Operations Edition**")
+st.sidebar.caption("Current Date: March 22, 2026")
