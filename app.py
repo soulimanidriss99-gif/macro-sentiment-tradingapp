@@ -18,6 +18,7 @@ st.markdown("""
 # --- CACHE AI MODEL ---
 @st.cache_resource
 def load_nlp():
+    # Loading FinBERT for financial-specific sentiment analysis
     return pipeline("sentiment-analysis", model="ProsusAI/finbert")
 
 nlp_model = load_nlp()
@@ -29,7 +30,7 @@ st.caption("Fundamental, Sentiment & Macro Analysis | Week of March 22, 2026")
 # --- FUNDAMENTAL STRATEGY SECTION ---
 st.markdown("### 💡 Fundamental Strategy & Top Picks")
 strategy_list = get_fundamental_strategy()
-cols = st.columns(3)
+cols = st.columns(len(strategy_list)) # Dynamically create columns for strategies
 
 for i, trade in enumerate(strategy_list):
     with cols[i]:
@@ -69,12 +70,17 @@ with tab2:
         
     if st.button("Calculate Market Shift"):
         res = nlp_model(news_input)[0]
+        # Get the dictionary of impacts
         impacts = get_futures_impact(res['label'], res['score'], cat)
         
         st.success(f"AI Sentiment: {res['label']} ({res['score']:.2%})")
-        m_cols = st.columns(4)
-        for i, (name, val) in enumerate(impacts.items()):
-            m_cols[i].metric(name, val)
+        
+        # FIX: Dynamically create exactly the number of columns needed for the results
+        instrument_names = list(impacts.keys())
+        m_cols = st.columns(len(instrument_names))
+        
+        for i, name in enumerate(instrument_names):
+            m_cols[i].metric(label=name, value=impacts[name])
 
 with tab3:
     st.write("### 📝 Futures Contract Reference (CME)")
@@ -87,5 +93,5 @@ with tab3:
     st.table(pd.DataFrame(specs))
 
 st.sidebar.markdown("---")
-st.sidebar.write("**Team Leader Operations Edition**")
+st.sidebar.write("**Developed for Ops Team Leader**")
 st.sidebar.caption("Current Date: March 22, 2026")
